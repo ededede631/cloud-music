@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -463,6 +463,100 @@
     }
     .volume-bar:hover .volume-fill::after { opacity: 1; }
 
+    /* ==================== 首页歌单网格（4列） ==================== */
+    .home-playlist-grid {
+      grid-template-columns: repeat(4, 1fr); /* 首页歌单4列 */
+      gap: 24px; /* 稍大间距，更突出 */
+    }
+    /* 首页歌单卡片稍大 */
+    .home-playlist-grid .playlist-card .name {
+      font-size: 14px; /* 歌单名称稍大 */
+    }
+
+    /* ==================== 排行榜预览网格 ==================== */
+    .rank-preview-grid {
+      display: grid; /* 网格布局 */
+      grid-template-columns: repeat(3, 1fr); /* 3列 */
+      gap: 20px; /* 网格间距 */
+      margin-top: 8px;
+    }
+    .rank-preview-card {
+      background: rgba(255,255,255,0.04); /* 半透明背景 */
+      border-radius: 12px; /* 圆角 */
+      padding: 20px; /* 内边距 */
+      transition: transform 0.3s, background 0.3s;
+      cursor: pointer;
+    }
+    .rank-preview-card:hover {
+      transform: translateY(-2px); /* 悬浮上移 */
+      background: rgba(255,255,255,0.07); /* 悬浮背景加深 */
+    }
+    .rank-preview-card .rp-header {
+      display: flex; /* 弹性布局 */
+      align-items: center; /* 垂直居中 */
+      gap: 14px; /* 封面与信息间距 */
+      margin-bottom: 16px; /* 底部间距 */
+    }
+    .rank-preview-card .rp-cover {
+      width: 80px; /* 封面尺寸 */
+      height: 80px;
+      border-radius: 8px; /* 圆角 */
+      overflow: hidden; /* 隐藏溢出 */
+      flex-shrink: 0; /* 不被压缩 */
+    }
+    .rank-preview-card .rp-cover img {
+      width: 100%; height: 100%; object-fit: cover; /* 覆盖填充 */
+    }
+    .rank-preview-card .rp-info { flex: 1; }
+    .rank-preview-card .rp-name {
+      font-size: 16px; /* 排行榜名称 */
+      font-weight: 600; /* 加粗 */
+      color: #fff;
+      line-height: 1.3;
+    }
+    .rank-preview-card .rp-update {
+      font-size: 11px; /* 更新频率 */
+      color: #666; /* 深灰 */
+      margin-top: 6px;
+    }
+    /* 排行榜预览歌曲列表 */
+    .rank-preview-card .rp-songs {
+      /* 歌曲列表容器 */
+    }
+    .rank-preview-card .rp-song-item {
+      display: flex; /* 弹性布局 */
+      align-items: center; /* 垂直居中 */
+      padding: 7px 0; /* 上下内边距 */
+      border-bottom: 1px solid rgba(255,255,255,0.04); /* 分隔线 */
+      cursor: pointer;
+      transition: background 0.2s;
+      border-radius: 4px;
+    }
+    .rank-preview-card .rp-song-item:last-child { border-bottom: none; } /* 最后一项无分隔线 */
+    .rank-preview-card .rp-song-item:hover { background: rgba(255,255,255,0.04); } /* 悬浮背景 */
+    .rank-preview-card .rp-song-rank {
+      width: 24px; /* 序号列宽度 */
+      text-align: center; /* 居中 */
+      font-size: 14px; /* 字号 */
+      color: #555; /* 深灰 */
+      flex-shrink: 0; /* 不被压缩 */
+    }
+    .rank-preview-card .rp-song-item:nth-child(1) .rp-song-rank { color: #ec4141; font-weight: 700; } /* 第1名红色 */
+    .rank-preview-card .rp-song-item:nth-child(2) .rp-song-rank { color: #ec4141; font-weight: 600; } /* 第2名红色 */
+    .rank-preview-card .rp-song-item:nth-child(3) .rp-song-rank { color: #ec4141; font-weight: 600; } /* 第3名红色 */
+    .rank-preview-card .rp-song-detail { flex: 1; min-width: 0; margin-left: 8px; }
+    .rank-preview-card .rp-song-name {
+      font-size: 13px; /* 歌曲名字号 */
+      color: #ccc; /* 浅灰 */
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* 单行截断 */
+    }
+    .rank-preview-card .rp-song-artist {
+      font-size: 11px; /* 歌手名字号 */
+      color: #666; /* 深灰 */
+      margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
     /* ==================== 响应式适配 ==================== */
     /* 平板及以下（<=768px） */
     @media (max-width: 768px) {
@@ -472,10 +566,11 @@
       .nav-search input:focus { width: 180px; } /* 聚焦缩小 */
       .content { padding: 72px 12px 24px; } /* 内容内边距缩小 */
       .playlist-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } /* 三列 */
+      .home-playlist-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } /* 首页歌单三列 */
+      .rank-preview-grid { grid-template-columns: 1fr; } /* 排行榜预览单列 */
       .rank-list { grid-template-columns: 1fr; } /* 排行榜单列 */
       .player-left { width: auto; } /* 播放器左侧自适应 */
       .player-right { display: none; } /* 隐藏音量控制 */
-      .banner-wrap { aspect-ratio: 2 / 1; } /* 轮播宽高比调整 */
       .playlist-detail-header { flex-direction: column; align-items: center; text-align: center; }
       .playlist-detail-header .detail-cover { width: 160px; height: 160px; }
       .section-title { font-size: 18px; }
@@ -483,6 +578,10 @@
     /* 手机竖屏（<=480px） */
     @media (max-width: 480px) {
       .playlist-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } /* 两列 */
+      .home-playlist-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } /* 首页歌单两列 */
+      .rank-preview-card .rp-header { gap: 10px; }
+      .rank-preview-card .rp-cover { width: 60px; height: 60px; }
+      .rank-preview-card .rp-name { font-size: 15px; }
       .player { padding: 0 12px; height: 64px; } /* 播放器缩小 */
       .player-controls { gap: 14px; } /* 控制按钮间距缩小 */
       .player-btn.play-btn { width: 38px; height: 38px; font-size: 18px; }
@@ -538,53 +637,28 @@
 
     <!-- ===== 首页 ===== -->
     <div class="page active" id="page-home">
-      <!-- 轮播Banner -->
-      <div class="banner-wrap">
-        <div class="banner-track" id="bannerTrack">
-          <!-- 三张轮播图 -->
-          <div class="banner-slide">
-            <img src="https://picsum.photos/seed/banner1/1200/430" alt="Banner 1">
-            <div class="banner-overlay">
-              <h2>2026年度音乐盛典</h2>
-              <p>聆听年度最受欢迎的华语金曲</p>
-            </div>
-          </div>
-          <div class="banner-slide">
-            <img src="https://picsum.photos/seed/banner2/1200/430" alt="Banner 2">
-            <div class="banner-overlay">
-              <h2>独家首发 · 新歌抢先听</h2>
-              <p>最新专辑限量首发，抢先体验</p>
-            </div>
-          </div>
-          <div class="banner-slide">
-            <img src="https://picsum.photos/seed/banner3/1200/430" alt="Banner 3">
-            <div class="banner-overlay">
-              <h2> Chill Vibes · 深夜电台</h2>
-              <p>深夜陪伴，温暖每一个夜晚</p>
-            </div>
-          </div>
-        </div>
-        <!-- 轮播指示器 -->
-        <div class="banner-dots">
-          <span class="active" data-index="0"></span>
-          <span data-index="1"></span>
-          <span data-index="2"></span>
-        </div>
-      </div>
 
-      <!-- 热门推荐歌单 -->
+      <!-- 推荐歌单（核心区域） -->
       <div class="section-title">
-        <span>🔥 热门推荐</span>
-        <span class="more">查看全部 ›</span>
+        <span>推荐歌单</span>
+        <span class="more" onclick="switchPage('page-playlist')">查看全部 ›</span>
       </div>
-      <div class="playlist-grid" id="hotPlaylistGrid">
+      <div class="playlist-grid home-playlist-grid" id="hotPlaylistGrid">
         <!-- 由JavaScript动态生成 -->
       </div>
 
-      <!-- 新歌榜单 -->
+      <!-- 排行榜预览（3列，每个显示封面+前3首歌） -->
       <div class="section-title">
-        <span>🎵 新歌速递</span>
-        <span class="more">更多 ›</span>
+        <span>排行榜</span>
+        <span class="more" onclick="switchPage('page-rank')">查看全部 ›</span>
+      </div>
+      <div class="rank-preview-grid" id="rankPreviewGrid">
+        <!-- 由JavaScript动态生成 -->
+      </div>
+
+      <!-- 最新音乐 -->
+      <div class="section-title">
+        <span>最新音乐</span>
       </div>
       <div class="song-list" id="newSongList">
         <!-- 由JavaScript动态生成 -->
@@ -1051,6 +1125,45 @@
         }
         html += '  </div>';
         html += '  <span class="song-duration">' + formatTime(song.duration) + '</span>'; // 时长
+        html += '</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    /**
+     * 渲染首页排行榜预览卡片
+     * 每个排行榜显示封面、名称、更新频率、前3首歌
+     */
+    function renderRankPreview() {
+      var container = document.getElementById('rankPreviewGrid');
+      if (!container) return;
+      var html = '';
+      for (var r = 0; r < rankData.length; r++) {
+        var rank = rankData[r];
+        // 取前3首歌
+        var previewCount = Math.min(3, rank.songIds.length);
+        html += '<div class="rank-preview-card fade-in" onclick="switchPage(\'page-rank\')">';
+        html += '  <div class="rp-header">';
+        html += '    <div class="rp-cover"><img src="' + rank.cover + '" alt="' + rank.name + '" onerror="this.style.display=\'none\'"></div>';
+        html += '    <div class="rp-info">';
+        html += '      <div class="rp-name">' + rank.name + '</div>';
+        html += '      <div class="rp-update">' + rank.update + '</div>';
+        html += '    </div>';
+        html += '  </div>';
+        html += '  <div class="rp-songs">';
+        for (var s = 0; s < previewCount; s++) {
+          var song = findSongById(rank.songIds[s]);
+          if (song) {
+            html += '<div class="rp-song-item" onclick="event.stopPropagation(); playSongFromList(' + song.id + ')">';
+            html += '  <span class="rp-song-rank">' + (s + 1) + '</span>';
+            html += '  <div class="rp-song-detail">';
+            html += '    <div class="rp-song-name">' + song.name + '</div>';
+            html += '    <div class="rp-song-artist">' + song.artist + '</div>';
+            html += '  </div>';
+            html += '</div>';
+          }
+        }
+        html += '  </div>';
         html += '</div>';
       }
       container.innerHTML = html;
@@ -1653,14 +1766,14 @@
     function init() {
       // 渲染首页热门推荐（取前6个歌单）
       renderPlaylists('hotPlaylistGrid', playlists);
+      // 渲染首页排行榜预览
+      renderRankPreview();
       // 渲染新歌列表（取前20首歌）
       renderSongList('newSongList', songs, true);
       // 渲染全部歌单页面
       renderPlaylists('allPlaylistGrid', playlists);
       // 渲染排行榜
       renderRankList();
-      // 启动轮播自动播放
-      startBannerAutoPlay();
       // 设置默认音量
       audioPlayer.volume = volume;
     }
@@ -1670,4 +1783,3 @@
   </script>
 </body>
 </html>
-
