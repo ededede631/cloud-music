@@ -1013,7 +1013,7 @@
         var pl = data[i];
         html += '<div class="playlist-card fade-in" onclick="openPlaylistDetail(' + pl.id + ')">';
         html += '  <div class="cover">';
-        html += '    <img src="' + pl.cover + '" alt="' + pl.name + '" loading="lazy">';
+        html += '    <img src="' + pl.cover + '" alt="' + pl.name + '" >';
         html += '    <span class="play-count">▶ ' + pl.playCount + '</span>'; // 播放次数
         html += '  </div>';
         html += '  <div class="name">' + pl.name + '</div>'; // 歌单名称
@@ -1039,7 +1039,7 @@
         if (showIndex) {
           html += '  <span class="song-index">' + (i + 1) + '</span>'; // 序号
         }
-        html += '  <div class="song-cover"><img src="' + song.cover + '" alt="' + song.name + '" loading="lazy"></div>';
+        html += '  <div class="song-cover"><img src="' + song.cover + '" alt="' + song.name + '" ></div>';
         html += '  <div class="song-info">';
         html += '    <div class="song-name">' + song.name + '</div>';
         html += '    <div class="song-artist">' + song.artist + '</div>';
@@ -1201,11 +1201,11 @@
       // 更新播放按钮图标
       btnPlay.textContent = '⏸';
 
-      // 初始化 Web Audio 上下文
-      initAudioCtx();
+      // 判断是否有真实音频文件
+      var hasAudioFile = song.url && song.url.length > 0;
 
-      // 尝试加载真实音频文件（如果提供了url）
-      if (song.url && song.url.length > 0) {
+      if (hasAudioFile) {
+        // 有真实音频：不需要初始化 Web Audio 合成器
         audioPlayer.src = song.url; // 设置音频源
         audioPlayer.volume = volume; // 设置音量
         // 当音频元数据加载完成时，自动更新歌曲时长
@@ -1220,12 +1220,13 @@
           startSynthPlay();
         });
       } else {
-        // 没有音频文件时，使用 Web Audio 合成音乐播放
+        // 没有音频文件时：初始化 Web Audio 合成器
+        initAudioCtx();
         startSynthPlay();
       }
 
-      // 重新渲染当前页面的歌曲列表以更新高亮状态
-      refreshCurrentPageSongList();
+      // 更新当前播放歌曲的高亮状态（不重新渲染整个列表，避免频闪）
+      updatePlayingHighlight();
     }
 
     /**
@@ -1537,6 +1538,10 @@
      * @param {number} index - 目标轮播索引
      */
     function goToBanner(index) {
+      var bannerTrack = document.querySelector('.banner-track');
+      if (bannerTrack) {
+        bannerTrack.style.transition = 'transform 0.5s ease'; // 平滑过渡
+      }
       bannerIndex = index;
       var track = document.getElementById('bannerTrack');
       track.style.transform = 'translateX(-' + (index * (100 / 3)) + '%)'; // 滑动
@@ -1572,6 +1577,26 @@
     function resetBannerTimer() {
       if (bannerTimer) clearInterval(bannerTimer);
       startBannerAutoPlay(); // 重新开始
+    }
+
+    // ==================== 更新播放高亮（不重新渲染） ====================
+
+    /**
+     * 更新当前播放歌曲的高亮状态（不触发动画）
+     */
+    function updatePlayingHighlight() {
+      // 移除所有旧的高亮
+      document.querySelectorAll('.song-item.playing').forEach(function(el) {
+        el.classList.remove('playing');
+      });
+      // 给当前播放的歌曲添加高亮
+      if (currentSongIndex >= 0 && currentSongIndex < playQueue.length) {
+        var songId = playQueue[currentSongIndex].id;
+        var allItems = document.querySelectorAll('.song-item[data-id="' + songId + '"]');
+        for (var i = 0; i < allItems.length; i++) {
+          allItems[i].classList.add('playing');
+        }
+      }
     }
 
     // ==================== 刷新当前页面的歌曲列表高亮 ====================
