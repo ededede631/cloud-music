@@ -748,7 +748,7 @@
   </div>
 
   <!-- ==================== 音频元素（模拟播放） ==================== -->
-  <audio id="audioPlayer" playsinline webkit-playsinline preload="metadata"></audio>
+  <audio id="audioPlayer" playsinline webkit-playsinline preload="auto"></audio>
 
   <!-- ==================== JavaScript ==================== -->
   <script>
@@ -1311,10 +1311,6 @@
       // 显示播放器
       playerEl.classList.add('show');
 
-      // 显示加载状态
-      btnPlay.textContent = '⏳';
-      songNameEl.textContent = song.name + ' - 加载中...';
-
       // 封面开始旋转
       playerCover.classList.add('spinning');
 
@@ -1335,7 +1331,6 @@
             totalTimeEl.textContent = formatTime(song.duration);
           }
         };
-        audioPlayer.load(); // 先加载（移动端必须）
         // 监听缓冲事件
         audioPlayer.onwaiting = function() {
           btnPlay.textContent = '⏳';
@@ -1344,32 +1339,22 @@
         audioPlayer.onplaying = function() {
           btnPlay.textContent = '⏸';
           songNameEl.textContent = song.name;
-        };
-        // 监听可播放事件后再播放
-        audioPlayer.oncanplay = function() {
-          audioPlayer.oncanplay = null; // 只触发一次
-          // 恢复正常状态显示
-          btnPlay.textContent = '⏸';
-          songNameEl.textContent = song.name;
           artistEl.textContent = song.artist;
-          var playPromise = audioPlayer.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(function(err) {
-              console.log('play failed:', err.message);
-            });
-          }
         };
-        // 超时保护：如果 oncanplay 没触发（如缓存命中），2秒后强制播放
-        setTimeout(function() {
-          if (audioPlayer.paused && isPlaying) {
+        // 立即播放（必须在用户手势同步调用链中，移动端才能成功）
+        var playPromise = audioPlayer.play();
+        if (playPromise !== undefined) {
+          playPromise.then(function() {
             btnPlay.textContent = '⏸';
             songNameEl.textContent = song.name;
-            var playPromise2 = audioPlayer.play();
-            if (playPromise2 !== undefined) {
-              playPromise2.catch(function() {});
-            }
-          }
-        }, 2000);
+            artistEl.textContent = song.artist;
+          }).catch(function(err) {
+            // 自动播放被阻止（如需用户交互），显示提示
+            console.log('play blocked:', err.message);
+            btnPlay.textContent = '▶';
+            songNameEl.textContent = song.name;
+          });
+        }
       } else {
         // 没有音频文件时：初始化 Web Audio 合成器
         initAudioCtx();
