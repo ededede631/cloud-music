@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"> <!-- 字符编码声明 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 移动端适配 -->
+  <title>云音乐 - 发现好音乐</title> <!-- 页面标题 -->
+  <style>
+    /* ==================== 全局重置与基础样式 ==================== */
+    * {
+      margin: 0; /* 清除默认外边距 */
+      padding: 0; /* 清除默认内边距 */
+      box-sizing: border-box; /* 盒模型包含边框和内边距 */
+    }
+    /* 自定义滚动条 - Webkit内核浏览器 */
+    ::-webkit-scrollbar { width: 6px; } /* 滚动条宽度 */
+    ::-webkit-scrollbar-track { background: #2a2a2a; } /* 滚动条轨道背景 */
+    ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; } /* 滚动条滑块样式 */
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif; /* 字体栈 */
+      background: #1a1a1a; /* 深色主背景 */
+      color: #cccccc; /* 默认文字颜色 */
+      min-height: 100vh; /* 最小高度撑满视口 */
+      overflow-x: hidden; /* 隐藏水平滚动条 */
+      padding-bottom: 80px; /* 为底部播放器留出空间 */
+    }
+    a { color: inherit; text-decoration: none; } /* 链接继承颜色、去除下划线 */
+    ul { list-style: none; } /* 去除列表符号 */
+    img { display: block; max-width: 100%; } /* 图片块级显示 */
+
+    /* ==================== 顶部导航栏 ==================== */
+    .nav {
+      position: fixed; /* 固定在顶部 */
+      top: 0; left: 0; right: 0;
+      z-index: 100; /* 确保导航在最上层 */
+      height: 60px; /* 导航栏高度 */
+      background: rgba(20, 20, 20, 0.95); /* 半透明深色背景 */
+      backdrop-filter: blur(20px); /* 背景模糊效果 */
+      display: flex; /* 弹性布局 */
+      align-items: center; /* 垂直居中 */
+      padding: 0 24px; /* 左右内边距 */
+      border-bottom: 1px solid rgba(255,255,255,0.06); /* 底部细线 */
+    }
+    /* 网易云风格红色Logo */
+    .nav-logo {
+      display: flex; /* 弹性布局 */
+      align-items: center; /* 垂直居中 */
+      gap: 8px; /* Logo与文字间距 */
+      font-size: 20px; /* Logo字号 */
+      font-weight: 700; /* 加粗 */
+      color: #ec4141; /* 网易云标志性红色 */
+      margin-right: 32px; /* 右侧外边距 */
+      flex-shrink: 0; /* 不被压缩 */
+    }
+    /* Logo音乐图标（纯CSS绘制） */
+    .nav-logo .logo-icon {
+      width: 32px; height: 32px; /* 图标尺寸 */
+      background: #ec4141; /* 红色背景 */
+      border-radius: 6px; /* 圆角 */
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* 导航链接区域 */
+    .nav-links {
+      display: flex; /* 弹性布局 */
+      gap: 4px; /* 链接间距 */
+      flex-shrink: 0; /* 不被压缩 */
+    }
+    .nav-links a {
+      padding: 8px 16px; /* 内边距 */
+      border-radius: 20px; /* 圆角胶囊形 */
+      font-size: 14px; /* 字号 */
+      color: #aaa; /* 默认文字颜色 */
+      transition: all 0.3s; /* 过渡动画 */
+      cursor: pointer; /* 鼠标手型 */
+    }
+    .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.08); } /* 悬浮效果 */
+    .nav-links a.active { color: #fff; background: rgba(236,65,65,0.2); font-weight: 500; } /* 激活状态 */
+    /* 搜索框 */
+    .nav-search {
+      margin-left: auto; /* 推到右侧 */
+      position: relative; /* 相对定位（用于搜索图标） */
+      flex-shrink: 0; /* 不被压缩 */
+    }
+    .nav-search input {
+      width: 200px; /* 宽度 */
+      height: 36px; /* 高度 */
+      border: none; /* 无边框 */
+      border-radius: 18px; /* 圆角 */
+      background: rgba(255,255,255,0.1); /* 半透明白色背景 */
+      padding: 0 16px 0 38px; /* 内边距（左侧为搜索图标留空间） */
+      color: #fff; /* 文字颜色 */
+      font-size: 13px; /* 字号 */
+      outline: none; /* 去除聚焦边框 */
+      transition: all 0.3s; /* 过渡动画 */
+    }
+    .nav-search input::placeholder { color: #666; } /* 占位符颜色 */
+    .nav-search input:focus { width: 260px; background: rgba(255,255,255,0.15); } /* 聚焦展开 */
+    /* 搜索图标（使用SVG） */
+    .nav-search .search-icon {
+      position: absolute; /* 绝对定位 */
+      left: 12px; top: 50%; transform: translateY(-50%); /* 垂直居中 */
+      width: 16px; height: 16px;
+      color: #666;
+      pointer-events: none; /* 不阻挡点击事件 */
+    }
+
+    /* ==================== 内容区域通用 ==================== */
+    .content { max-width: 1200px; margin: 0 auto; padding: 80px 24px 24px; } /* 内容最大宽度和内边距 */
+    .section-title {
+      font-size: 22px; /* 标题字号 */
+      font-weight: 700; /* 加粗 */
+      color: #fff; /* 白色 */
+      margin: 32px 0 16px; /* 上下外边距 */
+      display: flex; /* 弹性布局 */
+      align-items: center; /* 垂直居中 */
+      justify-content: space-between; /* 两端对齐 */
+    }
+    .section-title .more { font-size: 13px; color: #888; cursor: pointer; } /* "更多"链接 */
+    .section-title .more:hover { color: #ec4141; } /* 悬浮变红 */
+
+    /* ==================== 轮播Banner ==================== */
+    .banner-wrap {
+      position: relative; /* 相对定位 */
+      width: 100%; /* 宽度撑满 */
+      border-radius: 12px; /* 圆角 */
+      overflow: hidden; /* 隐藏溢出 */
+      aspect-ratio: 2.8 / 1; /* 宽高比 */
+      margin-bottom: 16px; /* 底部间距 */
+    }
+    .banner-track {
+      display: flex; /* 弹性布局 */
+      width: 300%; /* 三张轮播总宽度 */
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); /* 滑动动画 */
+    }
+    .banner-slide {
+      width: calc(100% / 3); /* 每张占1/3 */
+      height: 100%; /* 高度撑满 */
+      position: relative; /* 相对定位 */
+    }
+    .banner-slide img {
+      width: 100%; height: 100%; object-fit: cover; /* 覆盖填充 */
+    }
+    /* 轮播文字覆盖层 */
+    .banner-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0; /* 定位在底部 */
+      padding: 40px 24px 20px; /* 内边距 */
+      background: linear-gradient(transparent, rgba(0,0,0,0.7)); /* 渐变遮罩 */
+    }
+    .banner-overlay h2 { font-size: 20px; color: #fff; margin-bottom: 4px; }
+    .banner-overlay p { font-size: 13px; color: #bbb; }
+    /* 轮播指示器（小圆点） */
+    .banner-dots {
+      position: absolute; bottom: 12px; right: 20px;
+      display: flex; gap: 6px; /* 圆点间距 */
+    }
+    .banner-dots span {
+      width: 8px; height: 8px; border-radius: 50%; /* 圆形 */
+      background: rgba(255,255,255,0.4); /* 半透明白色 */
+      cursor: pointer; transition: all 0.3s;
+    }
+    .banner-dots span.active { background: #ec4141; width: 20px; border-radius: 4px; } /* 激活状态变长变红 */
+
+    /* ==================== 歌单网格 ==================== */
+    .playlist-grid {
+      display: grid; /* 网格布局 */
+      grid-template-columns: repeat(5, 1fr); /* 5列等宽 */
+      gap: 20px; /* 网格间距 */
+    }
+    .playlist-card {
+      cursor: pointer; /* 鼠标手型 */
+      transition: transform 0.3s; /* 悬浮缩放动画 */
+    }
+    .playlist-card:hover { transform: translateY(-4px); } /* 悬浮上移 */
+    .playlist-card .cover {
+      position: relative; /* 相对定位 */
+      aspect-ratio: 1; /* 正方形封面 */
+      border-radius: 8px; /* 圆角 */
+      overflow: hidden; /* 隐藏溢出 */
+      margin-bottom: 8px; /* 底部间距 */
+    }
+    .playlist-card .cover img { width: 100%; height: 100%; object-fit: cover; } /* 封面图片 */
+    /* 封面播放次数 */
+    .playlist-card .play-count {
+      position: absolute; top: 6px; right: 8px; /* 右上角 */
+      font-size: 11px; color: #fff; /* 白色小字 */
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5); /* 文字阴影增强可读性 */
+    }
+    /* 封面悬浮播放按钮 */
+    .playlist-card .cover::after {
+      content: '▶'; /* 播放三角符号 */
+      position: absolute; bottom: 8px; right: 8px;
+      width: 36px; height: 36px; /* 按钮尺寸 */
+      background: rgba(236,65,65,0.85); /* 半透明红色 */
+      border-radius: 50%; /* 圆形 */
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: #fff;
+      opacity: 0; transform: scale(0.8); /* 默认隐藏缩小 */
+      transition: all 0.3s; /* 过渡动画 */
+    }
+    .playlist-card:hover .cover::after { opacity: 1; transform: scale(1); } /* 悬浮显示 */
+    .playlist-card .name {
+      font-size: 13px; /* 歌单名称字号 */
+      color: #ccc; /* 浅灰 */
+      line-height: 1.4; /* 行高 */
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; /* 两行截断 */
+      overflow: hidden;
+    }
+
+    /* ==================== 新歌列表 ==================== */
+    .song-list { margin-top: 8px; }
+    .song-item {
+      display: flex; /* 弹性布局 */
+      align-items: center; /* 垂直居中 */
+      padding: 10px 12px; /* 内边距 */
+      border-radius: 8px; /* 圆角 */
+      cursor: pointer; /* 鼠标手型 */
+      transition: background 0.2s; /* 背景过渡 */
+    }
+    .song-item:hover { background: rgba(255,255,255,0.06); } /* 悬浮背景 */
+    .song-item.playing { background: rgba(236,65,65,0.1); } /* 当前播放歌曲高亮 */
+    .song-item .song-index {
+      width: 36px; /* 序号列宽度 */
+      text-align: center; /* 居中 */
+      font-size: 14px; /* 字号 */
+      color: #666; /* 深灰 */
+      flex-shrink: 0; /* 不被压缩 */
+    }
+    .song-item.playing .song-index { color: #ec4141; } /* 播放中序号变红 */
+    .song-item .song-cover {
+      width: 48px; height: 48px; /* 封面尺寸 */
+      border-radius: 6px; /* 圆角 */
+      overflow: hidden; /* 隐藏溢出 */
+      flex-shrink: 0; /* 不被压缩 */
+      margin-right: 12px; /* 右侧间距 */
+    }
+    .song-item .song-cover img { width: 100%; height: 100%; object-fit: cover; } /* 封面图片 */
+    .song-item .song-info { flex: 1; min-width: 0; } /* 信息区域占据剩余空间 */
+    .song-item .song-name {
+      font-size: 14px; /* 歌曲名字号 */
+      color: #eee; /* 浅白 */
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* 单行截断 */
+    }
+    .song-item.playing .song-name { color: #ec4141; } /* 播放中歌名变红 */
+    .song-item .song-artist {
+      font-size: 12px; /* 歌手名字号 */
+      color: #777; /* 深灰 */
+      margin-top: 2px;
+    }
+    .song-item .song-album {
+      font-size: 12px; /* 专辑名字号 */
+      color: #555; /* 更深灰 */
+      margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .song-item .song-duration {
+      font-size: 12px; color: #555; /* 时长颜色 */
+      flex-shrink: 0; /* 不被压缩 */
+      margin-left: 12px; /* 左侧间距 */
+    }
+
+    /* ==================== 页面切换（首页/排行榜/歌单） ==================== */
+    .page { display: none; } /* 默认隐藏所有页面 */
+    .page.active { display: block; } /* 激活的页面显示 */
+
+    /* ==================== 排行榜页面 ==================== */
+    .rank-list {
+      display: grid; /* 网格布局 */
+      grid-template-columns: repeat(3, 1fr); /* 三列 */
+      gap: 20px; /* 间距 */
+      margin-top: 16px;
+    }
+    .rank-card {
+      background: rgba(255,255,255,0.04); /* 半透明背景 */
+      border-radius: 12px; /* 圆角 */
+      padding: 20px; /* 内边距 */
+      transition: transform 0.3s;
+    }
+    .rank-card:hover { transform: translateY(-2px); } /* 悬浮上移 */
+    .rank-card .rank-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .rank-card .rank-cover {
+      width: 64px; height: 64px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+    }
+    .rank-card .rank-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .rank-card .rank-name { font-size: 18px; font-weight: 600; color: #fff; }
+    .rank-card .rank-update { font-size: 11px; color: #666; margin-top: 4px; }
+    .rank-card ol { counter-reset: rank; } /* 重置计数器 */
+    .rank-card li {
+      display: flex; align-items: center;
+      padding: 8px 0; /* 上下内边距 */
+      border-bottom: 1px solid rgba(255,255,255,0.04); /* 分隔线 */
+      counter-increment: rank; /* 计数递增 */
+    }
+    .rank-card li:last-child { border-bottom: none; } /* 最后一项无分隔线 */
+    .rank-card li::before {
+      content: counter(rank); /* 显示序号 */
+      width: 24px; font-size: 14px; color: #555; text-align: center; flex-shrink: 0;
+    }
+    .rank-card li:nth-child(-n+3)::before { color: #ec4141; font-weight: 600; } /* 前三名红色 */
+    .rank-card li .rank-song-info { flex: 1; margin-left: 8px; }
+    .rank-card li .rank-song-name { font-size: 13px; color: #ccc; }
+    .rank-card li .rank-song-artist { font-size: 11px; color: #666; margin-top: 2px; }
+
+    /* ==================== 歌单详情页 ==================== */
+    .playlist-detail-header {
+      display: flex; gap: 24px; margin: 24px 0; align-items: flex-start;
+    }
+    .playlist-detail-header .detail-cover {
+      width: 200px; height: 200px; border-radius: 12px; overflow: hidden; flex-shrink: 0;
+    }
+    .playlist-detail-header .detail-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .playlist-detail-header .detail-info { flex: 1; }
+    .playlist-detail-header .detail-title { font-size: 22px; font-weight: 700; color: #fff; }
+    .playlist-detail-header .detail-creator { font-size: 13px; color: #888; margin-top: 8px; }
+    .playlist-detail-header .detail-desc { font-size: 12px; color: #666; margin-top: 12px; line-height: 1.6; }
+    .playlist-detail-header .detail-play-btn {
+      margin-top: 16px; padding: 10px 32px;
+      background: #ec4141; color: #fff; border: none; border-radius: 20px;
+      font-size: 14px; cursor: pointer; transition: all 0.3s;
+    }
+    .playlist-detail-header .detail-play-btn:hover { background: #d63535; }
+
+    /* ==================== 搜索结果 ==================== */
+    .search-results { margin-top: 16px; }
+    .search-empty { text-align: center; padding: 60px 20px; color: #555; font-size: 14px; }
+
+    /* ==================== 底部固定播放器 ==================== */
+    .player {
+      position: fixed; /* 固定在底部 */
+      bottom: 0; left: 0; right: 0;
+      z-index: 200; /* 最高层级 */
+      height: 72px; /* 播放器高度 */
+      background: rgba(24, 24, 24, 0.98); /* 深色背景 */
+      backdrop-filter: blur(20px); /* 背景模糊 */
+      border-top: 1px solid rgba(255,255,255,0.06); /* 顶部细线 */
+      display: flex; /* 弹性布局 */
+      align-items: center; /* 垂直居中 */
+      padding: 0 24px; /* 左右内边距 */
+      transform: translateY(100%); /* 默认隐藏在底部 */
+      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* 上滑动画 */
+    }
+    .player.show { transform: translateY(0); } /* 显示播放器 */
+    /* 播放器左侧 - 歌曲信息 */
+    .player-left {
+      display: flex; align-items: center; gap: 12px;
+      width: 240px; flex-shrink: 0;
+    }
+    /* 旋转封面 */
+    .player-cover {
+      width: 48px; height: 48px;
+      border-radius: 50%; /* 圆形 */
+      overflow: hidden;
+      flex-shrink: 0;
+      animation: rotate 20s linear infinite; /* 旋转动画 */
+      animation-play-state: paused; /* 默认暂停旋转 */
+      border: 2px solid rgba(255,255,255,0.1); /* 边框 */
+    }
+    .player-cover.spinning { animation-play-state: running; } /* 播放时旋转 */
+    .player-cover img { width: 100%; height: 100%; object-fit: cover; }
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } /* 旋转关键帧 */
+    .player-song-name {
+      font-size: 14px; color: #eee;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 160px;
+    }
+    .player-artist {
+      font-size: 12px; color: #777; margin-top: 2px;
+    }
+    /* 播放器中间 - 控制区域 */
+    .player-center {
+      flex: 1; /* 占据剩余空间 */
+      display: flex; flex-direction: column; /* 纵向排列 */
+      align-items: center; gap: 4px;
+    }
+    /* 控制按钮行 */
+    .player-controls {
+      display: flex; align-items: center; gap: 20px; /* 按钮间距 */
+    }
+    /* 播放器按钮通用样式 */
+    .player-btn {
+      width: 36px; height: 36px; /* 按钮尺寸 */
+      border: none; background: none; /* 无边框无背景 */
+      color: #ccc; /* 图标颜色 */
+      cursor: pointer; /* 鼠标手型 */
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; /* 圆形 */
+      transition: all 0.2s; /* 过渡动画 */
+      font-size: 18px; /* 图标字号 */
+    }
+    .player-btn:hover { color: #fff; background: rgba(255,255,255,0.1); } /* 悬浮效果 */
+    .player-btn.active { color: #ec4141; } /* 激活状态变红 */
+    /* 播放/暂停按钮 - 更大更醒目 */
+    .player-btn.play-btn {
+      width: 42px; height: 42px; /* 更大尺寸 */
+      background: #ec4141; /* 红色背景 */
+      color: #fff; /* 白色图标 */
+      font-size: 20px;
+    }
+    .player-btn.play-btn:hover { background: #d63535; transform: scale(1.05); } /* 悬浮效果 */
+    /* 进度条 */
+    .player-progress {
+      display: flex; align-items: center; gap: 8px; /* 进度条与时间间距 */
+      width: 100%; max-width: 500px;
+    }
+    .player-progress .time { font-size: 11px; color: #666; min-width: 36px; text-align: center; }
+    /* 自定义进度条滑块 */
+    .progress-bar {
+      flex: 1; height: 4px; /* 进度条高度 */
+      background: rgba(255,255,255,0.1); /* 轨道背景 */
+      border-radius: 2px; /* 圆角 */
+      position: relative; /* 相对定位（用于滑块） */
+      cursor: pointer; /* 鼠标手型 */
+    }
+    .progress-bar .progress-fill {
+      height: 100%; width: 0%; /* 默认无进度 */
+      background: #ec4141; /* 进度条颜色 */
+      border-radius: 2px;
+      transition: width 0.1s linear; /* 进度更新过渡 */
+      position: relative;
+    }
+    .progress-bar .progress-fill::after {
+      content: ''; /* 滑块（伪元素） */
+      position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
+      width: 12px; height: 12px; border-radius: 50%; /* 圆形滑块 */
+      background: #ec4141; border: 2px solid #fff; /* 白色边框 */
+      opacity: 0; /* 默认隐藏 */
+      transition: opacity 0.2s;
+    }
+    .progress-bar:hover .progress-fill::after { opacity: 1; } /* 悬浮显示滑块 */
+    .progress-bar:hover { height: 6px; } /* 悬浮加粗 */
+    /* 播放器右侧 - 音量等 */
+    .player-right {
+      display: flex; align-items: center; gap: 8px;
+      width: 200px; justify-content: flex-end; flex-shrink: 0;
+    }
+    .volume-wrap {
+      display: flex; align-items: center; gap: 6px;
+    }
+    /* 音量滑块 */
+    .volume-bar {
+      width: 80px; height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      position: relative;
+      cursor: pointer;
+    }
+    .volume-bar .volume-fill {
+      height: 100%; width: 70%; /* 默认音量70% */
+      background: #ccc;
+      border-radius: 2px;
+      position: relative;
+    }
+    .volume-bar .volume-fill::after {
+      content: '';
+      position: absolute; right: -5px; top: 50%; transform: translateY(-50%);
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #fff;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .volume-bar:hover .volume-fill::after { opacity: 1; }
+
+    /* ==================== 响应式适配 ==================== */
+    /* 平板及以下（<=768px） */
+    @media (max-width: 768px) {
+      .nav { padding: 0 12px; } /* 导航内边距缩小 */
+      .nav-links { display: none; } /* 隐藏导航链接（移动端通过其他方式访问） */
+      .nav-search input { width: 140px; } /* 搜索框缩小 */
+      .nav-search input:focus { width: 180px; } /* 聚焦缩小 */
+      .content { padding: 72px 12px 24px; } /* 内容内边距缩小 */
+      .playlist-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } /* 三列 */
+      .rank-list { grid-template-columns: 1fr; } /* 排行榜单列 */
+      .player-left { width: auto; } /* 播放器左侧自适应 */
+      .player-right { display: none; } /* 隐藏音量控制 */
+      .banner-wrap { aspect-ratio: 2 / 1; } /* 轮播宽高比调整 */
+      .playlist-detail-header { flex-direction: column; align-items: center; text-align: center; }
+      .playlist-detail-header .detail-cover { width: 160px; height: 160px; }
+      .section-title { font-size: 18px; }
+    }
+    /* 手机竖屏（<=480px） */
+    @media (max-width: 480px) {
+      .playlist-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } /* 两列 */
+      .player { padding: 0 12px; height: 64px; } /* 播放器缩小 */
+      .player-controls { gap: 14px; } /* 控制按钮间距缩小 */
+      .player-btn.play-btn { width: 38px; height: 38px; font-size: 18px; }
+      .player-cover { width: 40px; height: 40px; }
+      .player-song-name { max-width: 120px; font-size: 13px; }
+      .song-item .song-album { display: none; } /* 隐藏专辑信息 */
+    }
+
+    /* ==================== 动画 ==================== */
+    /* 淡入动画 */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); } /* 从下方透明淡入 */
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeInUp 0.5s ease forwards; } /* 淡入类 */
+    .fade-in:nth-child(2) { animation-delay: 0.05s; } /* 逐个延迟 */
+    .fade-in:nth-child(3) { animation-delay: 0.1s; }
+    .fade-in:nth-child(4) { animation-delay: 0.15s; }
+    .fade-in:nth-child(5) { animation-delay: 0.2s; }
+    .fade-in:nth-child(6) { animation-delay: 0.25s; }
+    .fade-in:nth-child(7) { animation-delay: 0.3s; }
+    .fade-in:nth-child(8) { animation-delay: 0.35s; }
+    .fade-in:nth-child(9) { animation-delay: 0.4s; }
+    .fade-in:nth-child(10) { animation-delay: 0.45s; }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== 顶部导航栏 ==================== -->
+  <nav class="nav">
+    <!-- Logo区域 -->
+    <div class="nav-logo">
+      <div class="logo-icon">♪</div> <!-- 纯CSS音符图标 -->
+      <span>云音乐</span>
+    </div>
+    <!-- 导航链接 -->
+    <div class="nav-links">
+      <a class="active" data-page="home">首页</a> <!-- 默认激活首页 -->
+      <a data-page="rank">排行榜</a>
+      <a data-page="playlist">歌单</a>
+    </div>
+    <!-- 搜索框 -->
+    <div class="nav-search">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="搜索音乐、歌手、歌单"> <!-- 搜索输入框 -->
+    </div>
+  </nav>
+
+  <!-- ==================== 主要内容区域 ==================== -->
+  <div class="content">
+
+    <!-- ===== 首页 ===== -->
+    <div class="page active" id="page-home">
+      <!-- 轮播Banner -->
+      <div class="banner-wrap">
+        <div class="banner-track" id="bannerTrack">
+          <!-- 三张轮播图 -->
+          <div class="banner-slide">
+            <img src="https://picsum.photos/seed/banner1/1200/430" alt="Banner 1">
+            <div class="banner-overlay">
+              <h2>2026年度音乐盛典</h2>
+              <p>聆听年度最受欢迎的华语金曲</p>
+            </div>
+          </div>
+          <div class="banner-slide">
+            <img src="https://picsum.photos/seed/banner2/1200/430" alt="Banner 2">
+            <div class="banner-overlay">
+              <h2>独家首发 · 新歌抢先听</h2>
+              <p>最新专辑限量首发，抢先体验</p>
+            </div>
+          </div>
+          <div class="banner-slide">
+            <img src="https://picsum.photos/seed/banner3/1200/430" alt="Banner 3">
+            <div class="banner-overlay">
+              <h2> Chill Vibes · 深夜电台</h2>
+              <p>深夜陪伴，温暖每一个夜晚</p>
+            </div>
+          </div>
+        </div>
+        <!-- 轮播指示器 -->
+        <div class="banner-dots">
+          <span class="active" data-index="0"></span>
+          <span data-index="1"></span>
+          <span data-index="2"></span>
+        </div>
+      </div>
+
+      <!-- 热门推荐歌单 -->
+      <div class="section-title">
+        <span>🔥 热门推荐</span>
+        <span class="more">查看全部 ›</span>
+      </div>
+      <div class="playlist-grid" id="hotPlaylistGrid">
+        <!-- 由JavaScript动态生成 -->
+      </div>
+
+      <!-- 新歌榜单 -->
+      <div class="section-title">
+        <span>🎵 新歌速递</span>
+        <span class="more">更多 ›</span>
+      </div>
+      <div class="song-list" id="newSongList">
+        <!-- 由JavaScript动态生成 -->
+      </div>
+    </div>
+
+    <!-- ===== 排行榜页面 ===== -->
+    <div class="page" id="page-rank">
+      <div class="section-title"><span>📊 排行榜</span></div>
+      <div class="rank-list" id="rankList">
+        <!-- 由JavaScript动态生成 -->
+      </div>
+    </div>
+
+    <!-- ===== 歌单页面 ===== -->
+    <div class="page" id="page-playlist">
+      <div class="section-title"><span>🎶 精选歌单</span></div>
+      <div class="playlist-grid" id="allPlaylistGrid">
+        <!-- 由JavaScript动态生成 -->
+      </div>
+    </div>
+
+    <!-- ===== 歌单详情页 ===== -->
+    <div class="page" id="page-playlist-detail">
+      <div class="playlist-detail-header" id="playlistDetailHeader">
+        <!-- 由JavaScript动态生成 -->
+      </div>
+      <div class="song-list" id="playlistDetailSongs">
+        <!-- 由JavaScript动态生成 -->
+      </div>
+    </div>
+
+    <!-- ===== 搜索结果页 ===== -->
+    <div class="page" id="page-search">
+      <div class="section-title"><span id="searchTitle">搜索结果</span></div>
+      <div class="search-results" id="searchResults">
+        <div class="search-empty">输入关键词搜索音乐、歌手或歌单</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== 底部固定播放器 ==================== -->
+  <div class="player" id="player">
+    <!-- 左侧：旋转封面 + 歌曲信息 -->
+    <div class="player-left">
+      <div class="player-cover" id="playerCover">
+        <img id="playerCoverImg" src="https://picsum.photos/seed/default/100/100" alt="封面">
+      </div>
+      <div>
+        <div class="player-song-name" id="playerSongName">未播放</div>
+        <div class="player-artist" id="playerArtist">--</div>
+      </div>
+    </div>
+    <!-- 中间：控制按钮 + 进度条 -->
+    <div class="player-center">
+      <div class="player-controls">
+        <!-- 循环模式按钮 -->
+        <button class="player-btn active" id="btnMode" title="循环模式">🔁</button>
+        <!-- 上一首按钮 -->
+        <button class="player-btn" id="btnPrev" title="上一首">⏮</button>
+        <!-- 播放/暂停按钮 -->
+        <button class="player-btn play-btn" id="btnPlay" title="播放">▶</button>
+        <!-- 下一首按钮 -->
+        <button class="player-btn" id="btnNext" title="下一首">⏭</button>
+        <!-- 收藏按钮（装饰） -->
+        <button class="player-btn" id="btnLike" title="收藏">♡</button>
+      </div>
+      <!-- 进度条 -->
+      <div class="player-progress">
+        <span class="time" id="currentTime">0:00</span> <!-- 当前播放时间 -->
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div> <!-- 进度填充 -->
+        </div>
+        <span class="time" id="totalTime">0:00</span> <!-- 总时长 -->
+      </div>
+    </div>
+    <!-- 右侧：音量控制 -->
+    <div class="player-right">
+      <div class="volume-wrap">
+        <button class="player-btn" id="btnVolume" title="音量">🔊</button>
+        <div class="volume-bar" id="volumeBar">
+          <div class="volume-fill" id="volumeFill"></div> <!-- 音量填充 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 音频元素（模拟播放） ==================== -->
+  <audio id="audioPlayer"></audio>
+
+  <!-- ==================== JavaScript ==================== -->
+  <script>
+    // ==================== 模拟音乐数据 ====================
+
+    /**
+     * 歌曲数据数组
+     * 每首歌包含：id, name(歌名), artist(歌手), album(专辑),
+     *            duration(秒), cover(封面图URL)
+     *
+     * 【替换歌曲方法】
+     * 1. 将音频文件(.mp3)放在与本HTML文件相同的文件夹中
+     * 2. 在下方每首歌的数据中添加 url 字段，值设为 "你的歌曲文件名.mp3"
+     *    例如: { id: 1, name: '晴天', artist: '周杰伦', ..., url: '晴天.mp3' }
+     * 3. 封面图片同理，将cover替换为本地图片路径，如 "covers/晴天.jpg"
+     */
+    var songs = [
+      { id: 1,  name: '花海',                artist: '周杰伦',               album: '魔杰座',         duration: 0, cover: 'covers/cover01.jpg', url: 'music/花海-周杰伦.mp3' },
+      { id: 2,  name: '晴天',                artist: '周杰伦',               album: '叶惠美',         duration: 0, cover: 'covers/cover02.jpg', url: 'music/晴天-周杰伦.mp3' },
+      { id: 3,  name: '搁浅',                artist: '周杰伦',               album: '七里香',         duration: 0, cover: 'covers/cover03.jpg', url: 'music/搁浅-周杰伦.mp3' },
+      { id: 4,  name: 'Run Away With Me',    artist: 'Carly Rae Jepsen',     album: 'E.MO.TION',      duration: 0, cover: 'covers/cover04.jpg', url: 'music/Run Away With Me-Carly Rae Jepsen.mp3' },
+      { id: 5,  name: 'Curiosity',           artist: 'Carly Rae Jepsen',     album: 'Kiss',           duration: 0, cover: 'covers/cover05.jpg', url: 'music/Curiosity-Carly Rae Jepsen.mp3' },
+      { id: 6,  name: 'I Really Like You',   artist: 'Carly Rae Jepsen',     album: 'Emotion',        duration: 0, cover: 'covers/cover06.jpg', url: 'music/I Really Like You-Carly Rae Jepsen.mp3' },
+      { id: 7,  name: 'Good Time',           artist: 'Owl City & CRJ',       album: 'The Midsummer Station', duration: 0, cover: 'covers/cover07.jpg', url: 'music/Good Time-Owl City&Carly Rae Jepsen.mp3' },
+      { id: 8,  name: 'Call Me Maybe',       artist: 'Carly Rae Jepsen',     album: 'Kiss',           duration: 0, cover: 'covers/cover08.jpg', url: 'music/Call Me Maybe-Carly Rae Jepsen.mp3' },
+      { id: 9,  name: 'Cut To The Feeling',  artist: 'Carly Rae Jepsen',     album: 'EMOTION Side B', duration: 0, cover: 'covers/cover09.jpg', url: 'music/Cut To The Feeling-Carly Rae Jepsen.mp3' },
+      { id: 10, name: 'Your Type',           artist: 'Carly Rae Jepsen',     album: 'E.MO.TION',      duration: 0, cover: 'covers/cover10.jpg', url: 'music/Your Type-Carly Rae Jepsen.mp3' },
+      { id: 11, name: 'Higher',              artist: 'Carly Rae Jepsen',     album: 'Dedicated',       duration: 0, cover: 'covers/cover11.jpg', url: 'music/Higher-Carly Rae Jepsen.mp3' },
+      { id: 12, name: 'Emotion',             artist: 'Carly Rae Jepsen',     album: 'E.MO.TION',      duration: 0, cover: 'covers/cover12.jpg', url: 'music/Emotion-Carly Rae Jepsen.mp3' },
+      { id: 13, name: 'Roses',               artist: 'Carly Rae Jepsen',     album: 'Dedicated Side B', duration: 0, cover: 'covers/cover13.jpg', url: 'music/Roses-Carly Rae Jepsen.mp3' },
+      { id: 14, name: 'The Schuyler Sisters',artist: 'Original Broadway Cast', album: 'Hamilton',      duration: 0, cover: 'covers/cover14.jpg', url: 'music/The Schuyler Sisters-Renee Elise Goldsberry&Phillipa Soo.mp3' },
+      { id: 15, name: 'Satisfied',           artist: 'Original Broadway Cast', album: 'Hamilton',      duration: 0, cover: 'covers/cover15.jpg', url: 'music/Satisfied-Renee Elise Goldsberry&Original Broadway Cast.mp3' },
+      { id: 16, name: 'Take a Break',        artist: 'Original Broadway Cast', album: 'Hamilton',      duration: 0, cover: 'covers/cover16.jpg', url: 'music/Take a Break-Phillipa Soo&Lin Manuel Miranda&Renee Elise Goldsberry.mp3' },
+      { id: 17, name: 'Dear Theodosia',      artist: 'Original Broadway Cast', album: 'Hamilton',      duration: 0, cover: 'covers/cover17.jpg', url: 'music/Dear Theodosia-Leslie Odom Jr.&Lin Manuel Miranda.mp3' },
+      { id: 18, name: 'Wait for It',         artist: 'Original Broadway Cast', album: 'Hamilton',      duration: 0, cover: 'covers/cover18.jpg', url: 'music/Wait for It-Leslie Odom Jr.&Original Broadway Cast.mp3' }
+    ];
+
+    /**
+     * 歌单数据数组
+     * 每个歌单包含：id, name(名称), cover(封面图), playCount(播放次数), songIds(包含的歌曲ID列表), creator(创建者)
+     *
+     * 【替换歌单封面方法】
+     * 将cover替换为本地图片路径，如 "covers/歌单1.jpg"
+     * 或使用网络图片URL
+     */
+    var playlists = [
+      {
+        id: 1,
+        name: '周杰伦精选',
+        cover: 'covers/cover01.jpg',
+        playCount: '512.6万',
+        creator: '杰迷之家',
+        songIds: [1, 2, 3]
+      },
+      {
+        id: 2,
+        name: 'Carly Rae Jepsen 合集',
+        cover: 'covers/cover04.jpg',
+        playCount: '88.5万',
+        creator: '欧美音乐推荐',
+        songIds: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+      },
+      {
+        id: 3,
+        name: 'Hamilton 音乐剧精选',
+        cover: 'covers/cover14.jpg',
+        playCount: '66.3万',
+        creator: '音乐剧爱好者',
+        songIds: [14, 15, 16, 17, 18]
+      },
+      {
+        id: 4,
+        name: '我的收藏歌曲',
+        cover: 'covers/my-collection-cover.jpg',
+        playCount: '26.3万',
+        creator: '我',
+        songIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+      }
+    ];
+
+    /**
+     * 排行榜数据
+     * 每个榜单包含：name(名称), cover(封面), update(更新频率), songIds(歌曲ID)
+     */
+    var rankData = [
+      {
+        name: '飙升榜',
+        cover: 'https://picsum.photos/seed/rank1/128/128',
+        update: '每日更新',
+        songIds: [8, 13, 4, 9, 6, 11]
+      },
+      {
+        name: '新歌榜',
+        cover: 'https://picsum.photos/seed/rank2/128/128',
+        update: '每日更新',
+        songIds: [12, 13, 14, 15, 10, 1]
+      },
+      {
+        name: '热歌榜',
+        cover: 'https://picsum.photos/seed/rank3/128/128',
+        update: '每周更新',
+        songIds: [8, 4, 1, 3, 5, 18]
+      }
+    ];
+
+    // ==================== 全局状态 ====================
+    var currentSongIndex = -1; // 当前播放歌曲在播放列表中的索引（-1表示未播放）
+    var playQueue = []; // 播放队列（歌曲对象数组）
+    var isPlaying = false; // 是否正在播放
+    var playMode = 'sequence'; // 播放模式：sequence(顺序), loop(单曲循环)
+    var progressTimer = null; // 模拟进度更新定时器
+    var currentProgress = 0; // 当前进度（秒）
+    var bannerIndex = 0; // 当前轮播索引
+    var bannerTimer = null; // 轮播定时器
+    var volume = 0.7; // 当前音量（0-1）
+
+    // ==================== Web Audio 合成音乐引擎 ====================
+    var audioCtx = null; // Web Audio 上下文（延迟初始化）
+    var synthTimer = null; // 合成器定时器
+    var synthGainNode = null; // 主音量节点
+    var synthNoteIndex = 0; // 当前播放到的音符索引
+    var synthMelody = []; // 当前歌曲的旋律音符序列
+
+    /**
+     * 初始化 Web Audio 上下文（需要用户交互后才能创建）
+     */
+    function initAudioCtx() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // 创建音频上下文
+        synthGainNode = audioCtx.createGain(); // 创建主音量节点
+        synthGainNode.connect(audioCtx.destination); // 连接到扬声器
+        synthGainNode.gain.value = volume; // 设置音量
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume(); // 恢复被暂停的上下文
+    }
+
+    /**
+     * 播放单个音符（使用振荡器）
+     * @param {number} freq - 频率（Hz），0表示休止符
+     * @param {number} duration - 持续时间（秒）
+     * @param {string} waveType - 波形类型：sine(正弦), triangle(三角), square(方波), sawtooth(锯齿)
+     */
+    function playNote(freq, duration, waveType) {
+      if (!audioCtx || freq === 0) return; // 无音频上下文或休止符则跳过
+      var osc = audioCtx.createOscillator(); // 创建振荡器
+      var noteGain = audioCtx.createGain(); // 创建音符音量节点
+      osc.type = waveType || 'sine'; // 设置波形类型
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime); // 设置频率
+      // 音符包络：淡入淡出，避免爆音
+      noteGain.gain.setValueAtTime(0, audioCtx.currentTime); // 从静音开始
+      noteGain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05); // 5ms淡入
+      noteGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + duration * 0.7); // 逐渐衰减
+      noteGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration); // 淡出到静音
+      osc.connect(noteGain); // 振荡器连接到音量
+      noteGain.connect(synthGainNode); // 音量连接到主音量
+      osc.start(audioCtx.currentTime); // 开始播放
+      osc.stop(audioCtx.currentTime + duration); // 在指定时间后停止
+    }
+
+    /**
+     * 根据歌曲ID生成独特的旋律音符序列
+     * 每首歌基于ID生成不同的音阶和节奏模式
+     * @param {number} songId - 歌曲ID
+     * @param {number} totalDuration - 歌曲总时长（秒）
+     * @returns {Array} 音符序列 [{freq, duration, waveType}, ...]
+     */
+    function generateMelody(songId, totalDuration) {
+      var notes = []; // 音符数组
+      // 中国五声音阶频率（宫商角徵羽的多个八度）
+      var pentatonic = [
+        261.63, 293.66, 329.63, 392.00, 440.00, // C4 D4 E4 G4 A4 第一个八度
+        523.25, 587.33, 659.25, 784.00, 880.00, // C5 D5 E5 G5 A5 第二个八度
+        196.00, 220.00, 246.94, 293.66, 329.63  // G3 A3 B3 D4 E4 低音区
+      ];
+      // 伴奏和弦频率（低八度）
+      var bass = [
+        130.81, 146.83, 164.81, 196.00, 220.00, // C3 D3 E3 G3 A3
+        261.63, 293.66, 329.63, 392.00, 440.00  // C4 D4 E4 G4 A4
+      ];
+      // 波形选择（根据歌曲ID变化，让每首歌音色不同）
+      var waveTypes = ['sine', 'triangle', 'sine', 'triangle', 'square'];
+      var mainWave = waveTypes[songId % waveTypes.length];
+      var bassWave = 'sine'; // 低音始终用柔和的正弦波
+
+      // 使用歌曲ID作为随机种子
+      var seed = songId * 137;
+      function pseudoRandom() {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      }
+
+      var t = 0; // 当前时间
+      var noteLen = 0.25 + (songId % 5) * 0.05; // 基本音符时值（随歌曲变化）
+      var lastNoteIdx = 0; // 上一个主旋律音符的索引（用于限制跳跃幅度）
+
+      while (t < totalDuration) {
+        // 主旋律音符（每拍一个）
+        var melodyIdx = Math.floor(pseudoRandom() * pentatonic.length);
+        // 限制音阶跳跃：相邻音符索引差不超过4，让旋律更连贯
+        melodyIdx = Math.max(0, Math.min(pentatonic.length - 1,
+          lastNoteIdx + Math.round((melodyIdx - lastNoteIdx) * 0.4)));
+        lastNoteIdx = melodyIdx;
+        var dur = noteLen * (0.5 + pseudoRandom()); // 随机时值变化
+        notes.push({ freq: pentatonic[melodyIdx], duration: dur, waveType: mainWave });
+        t += dur;
+
+        // 偶尔插入休止符（增加节奏感）
+        if (pseudoRandom() < 0.15) {
+          notes.push({ freq: 0, duration: noteLen * 0.5, waveType: 'sine' }); // 休止符
+          t += noteLen * 0.5;
+        }
+
+        // 低音伴奏（每2拍一个，与主旋律形成和弦效果）
+        if (pseudoRandom() < 0.4) {
+          var bassIdx = Math.floor(pseudoRandom() * bass.length);
+          notes.push({ freq: bass[bassIdx], duration: noteLen * 2, waveType: bassWave });
+        }
+      }
+      return notes;
+    }
+
+    /**
+     * 启动合成器播放（替代模拟进度）
+     */
+    function startSynthPlay() {
+      stopSynthPlay(); // 先停止旧的合成器
+      if (currentSongIndex < 0) return;
+      var song = playQueue[currentSongIndex];
+      synthMelody = generateMelody(song.id, song.duration); // 生成旋律
+      synthNoteIndex = 0;
+
+      // 预计算每个音符的起始时间，用于同步进度
+      var noteStartTimes = [0];
+      for (var i = 0; i < synthMelody.length; i++) {
+        noteStartTimes.push(noteStartTimes[i] + synthMelody[i].duration);
+      }
+      synthMelody._startTimes = noteStartTimes; // 附加到旋律对象上
+
+      // 合成器调度循环
+      var nextNoteTime = 0;
+      function scheduleNotes() {
+        if (!isPlaying) return;
+        // 批量调度前方200ms内的音符，保证播放流畅
+        while (synthNoteIndex < synthMelody.length) {
+          var note = synthMelody[synthNoteIndex];
+          if (nextNoteTime > 0.2) break; // 只提前200ms调度
+          playNote(note.freq, note.duration, note.waveType); // 播放音符
+          nextNoteTime -= note.duration;
+          synthNoteIndex++;
+        }
+        if (synthNoteIndex < synthMelody.length) {
+          synthTimer = setTimeout(scheduleNotes, 50); // 每50ms调度一次
+        }
+      }
+
+      // 进度更新定时器
+      if (progressTimer) clearInterval(progressTimer);
+      var playStartTime = Date.now();
+      progressTimer = setInterval(function() {
+        if (!isPlaying) return;
+        currentProgress = (Date.now() - playStartTime) / 1000; // 根据实际时间计算进度
+        var song = playQueue[currentSongIndex];
+        if (currentProgress >= song.duration) {
+          playNext(); // 播放结束，自动下一首
+          return;
+        }
+        updateProgress();
+      }, 100); // 每100ms更新进度
+
+      scheduleNotes(); // 开始调度音符
+    }
+
+    /**
+     * 停止合成器播放
+     */
+    function stopSynthPlay() {
+      if (synthTimer) { clearTimeout(synthTimer); synthTimer = null; }
+      if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+      synthNoteIndex = 0;
+    }
+
+    // ==================== DOM元素引用 ====================
+    var audioPlayer = document.getElementById('audioPlayer'); // 音频播放器
+    var playerEl = document.getElementById('player'); // 播放器容器
+    var playerCover = document.getElementById('playerCover'); // 播放器封面
+    var playerCoverImg = document.getElementById('playerCoverImg'); // 封面图片
+    var playerSongName = document.getElementById('playerSongName'); // 歌曲名显示
+    var playerArtist = document.getElementById('playerArtist'); // 歌手名显示
+    var btnPlay = document.getElementById('btnPlay'); // 播放/暂停按钮
+    var btnPrev = document.getElementById('btnPrev'); // 上一首按钮
+    var btnNext = document.getElementById('btnNext'); // // 下一首按钮
+    var btnMode = document.getElementById('btnMode'); // 循环模式按钮
+    var btnLike = document.getElementById('btnLike'); // 收藏按钮
+    var btnVolume = document.getElementById('btnVolume'); // 音量按钮
+    var progressBar = document.getElementById('progressBar'); // 进度条
+    var progressFill = document.getElementById('progressFill'); // 进度填充
+    var currentTimeEl = document.getElementById('currentTime'); // 当前时间
+    var totalTimeEl = document.getElementById('totalTime'); // 总时间
+    var volumeBar = document.getElementById('volumeBar'); // 音量条
+    var volumeFill = document.getElementById('volumeFill'); // 音量填充
+    var searchInput = document.getElementById('searchInput'); // 搜索输入框
+
+    // ==================== 工具函数 ====================
+
+    /**
+     * 格式化秒数为 m:ss 格式
+     * @param {number} seconds - 秒数
+     * @returns {string} 格式化后的时间字符串
+     */
+    function formatTime(seconds) {
+      var mins = Math.floor(seconds / 60); // 计算分钟
+      var secs = Math.floor(seconds % 60); // 计算秒数
+      return mins + ':' + (secs < 10 ? '0' : '') + secs; // 拼接格式
+    }
+
+    /**
+     * 根据ID查找歌曲对象
+     * @param {number} id - 歌曲ID
+     * @returns {object|null} 歌曲对象或null
+     */
+    function findSongById(id) {
+      for (var i = 0; i < songs.length; i++) {
+        if (songs[i].id === id) return songs[i];
+      }
+      return null;
+    }
+
+    // ==================== 页面初始化渲染 ====================
+
+    /**
+     * 渲染歌单网格
+     * @param {string} containerId - 容器DOM ID
+     * @param {Array} data - 歌单数据数组
+     */
+    function renderPlaylists(containerId, data) {
+      var container = document.getElementById(containerId); // 获取容器
+      var html = ''; // 拼接HTML字符串
+      for (var i = 0; i < data.length; i++) {
+        var pl = data[i];
+        html += '<div class="playlist-card fade-in" onclick="openPlaylistDetail(' + pl.id + ')">';
+        html += '  <div class="cover">';
+        html += '    <img src="' + pl.cover + '" alt="' + pl.name + '" loading="lazy">';
+        html += '    <span class="play-count">▶ ' + pl.playCount + '</span>'; // 播放次数
+        html += '  </div>';
+        html += '  <div class="name">' + pl.name + '</div>'; // 歌单名称
+        html += '</div>';
+      }
+      container.innerHTML = html; // 插入到容器
+    }
+
+    /**
+     * 渲染歌曲列表
+     * @param {string} containerId - 容器DOM ID
+     * @param {Array} songData - 歌曲数据数组
+     * @param {boolean} showIndex - 是否显示序号
+     */
+    function renderSongList(containerId, songData, showIndex) {
+      var container = document.getElementById(containerId);
+      var html = '';
+      for (var i = 0; i < songData.length; i++) {
+        var song = songData[i];
+        var isCurrentPlaying = playQueue.length > 0 && currentSongIndex >= 0 &&
+          playQueue[currentSongIndex] && playQueue[currentSongIndex].id === song.id; // 判断是否为当前播放
+        html += '<div class="song-item' + (isCurrentPlaying ? ' playing' : '') + ' fade-in" onclick="playSongFromList(' + song.id + ')">';
+        if (showIndex) {
+          html += '  <span class="song-index">' + (i + 1) + '</span>'; // 序号
+        }
+        html += '  <div class="song-cover"><img src="' + song.cover + '" alt="' + song.name + '" loading="lazy"></div>';
+        html += '  <div class="song-info">';
+        html += '    <div class="song-name">' + song.name + '</div>';
+        html += '    <div class="song-artist">' + song.artist + '</div>';
+        if (window.innerWidth > 480) {
+          html += '    <div class="song-album">' + song.album + '</div>'; // 专辑（PC端显示）
+        }
+        html += '  </div>';
+        html += '  <span class="song-duration">' + formatTime(song.duration) + '</span>'; // 时长
+        html += '</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    /**
+     * 渲染排行榜
+     */
+    function renderRankList() {
+      var container = document.getElementById('rankList');
+      var html = '';
+      for (var r = 0; r < rankData.length; r++) {
+        var rank = rankData[r];
+        var rankSongs = [];
+        // 根据songIds获取歌曲对象
+        for (var s = 0; s < rank.songIds.length; s++) {
+          rankSongs.push(findSongById(rank.songIds[s]));
+        }
+        html += '<div class="rank-card fade-in">';
+        html += '  <div class="rank-header">';
+        html += '    <div class="rank-cover"><img src="' + rank.cover + '" alt="' + rank.name + '"></div>';
+        html += '    <div><div class="rank-name">' + rank.name + '</div>';
+        html += '    <div class="rank-update">' + rank.update + '</div></div>';
+        html += '  </div>';
+        html += '  <ol>';
+        for (var s = 0; s < rankSongs.length; s++) {
+          html += '<li onclick="playSongFromList(' + rankSongs[s].id + ')" style="cursor:pointer">';
+          html += '  <div class="rank-song-info">';
+          html += '    <div class="rank-song-name">' + rankSongs[s].name + '</div>';
+          html += '    <div class="rank-song-artist">' + rankSongs[s].artist + '</div>';
+          html += '  </div>';
+          html += '</li>';
+        }
+        html += '  </ol>';
+        html += '</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    /**
+     * 打开歌单详情页
+     * @param {number} playlistId - 歌单ID
+     */
+    function openPlaylistDetail(playlistId) {
+      // 查找对应歌单数据
+      var playlist = null;
+      for (var i = 0; i < playlists.length; i++) {
+        if (playlists[i].id === playlistId) { playlist = playlists[i]; break; }
+      }
+      if (!playlist) return;
+
+      // 渲染歌单详情头部
+      var header = document.getElementById('playlistDetailHeader');
+      var headerHtml = '';
+      headerHtml += '<div class="detail-cover"><img src="' + playlist.cover + '" alt="' + playlist.name + '"></div>';
+      headerHtml += '<div class="detail-info">';
+      headerHtml += '  <div class="detail-title">' + playlist.name + '</div>';
+      headerHtml += '  <div class="detail-creator">by ' + playlist.creator + ' · ' + playlist.songIds.length + '首</div>';
+      headerHtml += '  <div class="detail-desc">精选优质华语音乐，每一首都值得循环播放。</div>';
+      headerHtml += '  <button class="detail-play-btn" onclick="playAllFromPlaylist(' + playlist.id + ')">▶ 播放全部</button>';
+      headerHtml += '</div>';
+      header.innerHTML = headerHtml;
+
+      // 获取歌单中的歌曲并渲染列表
+      var playlistSongs = [];
+      for (var i = 0; i < playlist.songIds.length; i++) {
+        playlistSongs.push(findSongById(playlist.songIds[i]));
+      }
+      renderSongList('playlistDetailSongs', playlistSongs, true);
+
+      // 切换到歌单详情页
+      switchPage('playlist-detail');
+    }
+
+    /**
+     * 播放歌单中的全部歌曲
+     * @param {number} playlistId - 歌单ID
+     */
+    function playAllFromPlaylist(playlistId) {
+      var playlist = null;
+      for (var i = 0; i < playlists.length; i++) {
+        if (playlists[i].id === playlistId) { playlist = playlists[i]; break; }
+      }
+      if (!playlist) return;
+
+      playQueue = []; // 清空播放队列
+      for (var i = 0; i < playlist.songIds.length; i++) {
+        var song = findSongById(playlist.songIds[i]);
+        if (song) playQueue.push(song); // 添加到队列
+      }
+      if (playQueue.length > 0) {
+        currentSongIndex = 0; // 从第一首开始
+        startPlay(); // 开始播放
+      }
+    }
+
+    // ==================== 播放器核心功能 ====================
+
+    /**
+     * 播放指定ID的歌曲（从任意列表点击）
+     * @param {number} songId - 歌曲ID
+     */
+    function playSongFromList(songId) {
+      var song = findSongById(songId);
+      if (!song) return;
+
+      // 检查歌曲是否已在播放队列中
+      var found = -1;
+      for (var i = 0; i < playQueue.length; i++) {
+        if (playQueue[i].id === songId) { found = i; break; }
+      }
+
+      if (found === -1) {
+        // 不在队列中，将当前歌曲及后续所有歌曲加入队列
+        // 找到该歌曲在全局songs数组中的位置，将其后的歌曲作为播放队列
+        var startIdx = -1;
+        for (var i = 0; i < songs.length; i++) {
+          if (songs[i].id === songId) { startIdx = i; break; }
+        }
+        if (startIdx === -1) return;
+        playQueue = songs.slice(startIdx); // 从该歌曲开始截取
+        currentSongIndex = 0;
+      } else {
+        currentSongIndex = found; // 已在队列中，直接定位
+      }
+      startPlay(); // 开始播放
+    }
+
+    /**
+     * 开始播放当前歌曲
+     */
+    function startPlay() {
+      if (currentSongIndex < 0 || currentSongIndex >= playQueue.length) return;
+      var song = playQueue[currentSongIndex]; // 获取当前歌曲
+
+      // 更新播放器UI
+      playerSongName.textContent = song.name; // 歌曲名
+      playerArtist.textContent = song.artist; // 歌手名
+      playerCoverImg.src = song.cover; // 封面图
+      totalTimeEl.textContent = formatTime(song.duration); // 总时长
+      currentProgress = 0; // 重置进度
+      updateProgress(); // 更新进度显示
+      isPlaying = true;
+
+      // 显示播放器
+      playerEl.classList.add('show');
+
+      // 封面开始旋转
+      playerCover.classList.add('spinning');
+
+      // 更新播放按钮图标
+      btnPlay.textContent = '⏸';
+
+      // 初始化 Web Audio 上下文
+      initAudioCtx();
+
+      // 尝试加载真实音频文件（如果提供了url）
+      if (song.url && song.url.length > 0) {
+        audioPlayer.src = song.url; // 设置音频源
+        audioPlayer.volume = volume; // 设置音量
+        // 当音频元数据加载完成时，自动更新歌曲时长
+        audioPlayer.onloadedmetadata = function() {
+          if (audioPlayer.duration && song.duration === 0) {
+            song.duration = Math.floor(audioPlayer.duration);
+            totalTimeEl.textContent = formatTime(song.duration);
+          }
+        };
+        audioPlayer.play().catch(function() {
+          // 如果播放失败（如文件不存在），则使用合成音乐
+          startSynthPlay();
+        });
+      } else {
+        // 没有音频文件时，使用 Web Audio 合成音乐播放
+        startSynthPlay();
+      }
+
+      // 重新渲染当前页面的歌曲列表以更新高亮状态
+      refreshCurrentPageSongList();
+    }
+
+    /**
+     * 更新进度条显示
+     */
+    function updateProgress() {
+      if (currentSongIndex < 0 || currentSongIndex >= playQueue.length) return;
+      var song = playQueue[currentSongIndex];
+      var percent = (currentProgress / song.duration) * 100; // 计算进度百分比
+      progressFill.style.width = percent + '%'; // 设置宽度
+      currentTimeEl.textContent = formatTime(currentProgress); // 更新时间显示
+    }
+
+    /**
+     * 切换播放/暂停
+     */
+    function togglePlay() {
+      if (currentSongIndex < 0) return; // 没有歌曲可播放
+      var song = playQueue[currentSongIndex];
+      var hasAudioFile = song.url && song.url.length > 0; // 是否有真实音频
+      isPlaying = !isPlaying; // 切换状态
+
+      if (isPlaying) {
+        btnPlay.textContent = '⏸'; // 显示暂停图标
+        playerCover.classList.add('spinning'); // 封面开始旋转
+        if (hasAudioFile && audioPlayer.src) {
+          audioPlayer.play().catch(function() {}); // 恢复播放
+        } else if (audioCtx) {
+          audioCtx.resume(); // 恢复 Web Audio 上下文
+          // 如果合成器已停止，重新启动
+          if (!synthTimer) startSynthPlay();
+        }
+      } else {
+        btnPlay.textContent = '▶'; // 显示播放图标
+        playerCover.classList.remove('spinning'); // 封面停止旋转
+        if (hasAudioFile && audioPlayer.src) audioPlayer.pause(); // 暂停播放
+        else if (audioCtx) {
+          audioCtx.suspend(); // 挂起 Web Audio 上下文（暂停所有声音）
+        }
+      }
+    }
+
+    /**
+     * 播放上一首
+     */
+    function playPrev() {
+      if (playQueue.length === 0) return;
+      stopSynthPlay(); // 停止当前合成器
+      currentSongIndex--; // 索引减1
+      if (currentSongIndex < 0) currentSongIndex = playQueue.length - 1; // 循环到最后一首
+      currentProgress = 0; // 重置进度
+      startPlay(); // 开始播放
+    }
+
+    /**
+     * 播放下一首
+     */
+    function playNext() {
+      if (playQueue.length === 0) return;
+      stopSynthPlay(); // 停止当前合成器
+      if (playMode === 'loop') {
+        // 单曲循环：不切换歌曲
+        currentProgress = 0;
+        startPlay();
+        return;
+      }
+      // 顺序播放
+      currentSongIndex++; // 索引加1
+      if (currentSongIndex >= playQueue.length) currentSongIndex = 0; // 循环到第一首
+      currentProgress = 0; // 重置进度
+      startPlay(); // 开始播放
+    }
+
+    /**
+     * 切换播放模式
+     */
+    function toggleMode() {
+      if (playMode === 'sequence') {
+        playMode = 'loop'; // 切换到单曲循环
+        btnMode.textContent = '🔂'; // 单曲循环图标
+        btnMode.title = '单曲循环';
+      } else {
+        playMode = 'sequence'; // 切换到顺序播放
+        btnMode.textContent = '🔁'; // 顺序播放图标
+        btnMode.title = '顺序播放';
+      }
+    }
+
+    // ==================== 事件绑定 ====================
+
+    // 播放/暂停按钮点击
+    btnPlay.addEventListener('click', togglePlay);
+
+    // 上一首按钮点击
+    btnPrev.addEventListener('click', playPrev);
+
+    // 下一首按钮点击
+    btnNext.addEventListener('click', playNext);
+
+    // 循环模式按钮点击
+    btnMode.addEventListener('click', toggleMode);
+
+    // 收藏按钮点击（切换状态）
+    btnLike.addEventListener('click', function() {
+      btnLike.classList.toggle('active'); // 切换激活状态
+      btnLike.textContent = btnLike.classList.contains('active') ? '❤' : '♡'; // 切换图标
+    });
+
+    // 进度条点击跳转
+    progressBar.addEventListener('click', function(e) {
+      if (currentSongIndex < 0) return;
+      var rect = progressBar.getBoundingClientRect(); // 获取进度条位置
+      var x = e.clientX - rect.left; // 计算点击位置
+      var percent = x / rect.width; // 计算百分比
+      var song = playQueue[currentSongIndex];
+      currentProgress = percent * song.duration; // 计算对应时间
+      updateProgress(); // 更新进度
+      // 如果有真实音频，同步跳转
+      if (audioPlayer.src && audioPlayer.duration) {
+        audioPlayer.currentTime = currentProgress;
+      }
+    });
+
+    // 进度条拖拽功能
+    var isDraggingProgress = false; // 是否正在拖拽
+    progressBar.addEventListener('mousedown', function(e) {
+      isDraggingProgress = true; // 开始拖拽
+      handleProgressDrag(e);
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (isDraggingProgress) handleProgressDrag(e); // 拖拽中
+    });
+    document.addEventListener('mouseup', function() {
+      isDraggingProgress = false; // 结束拖拽
+    });
+
+    /**
+     * 处理进度条拖拽
+     * @param {Event} e - 鼠标事件
+     */
+    function handleProgressDrag(e) {
+      var rect = progressBar.getBoundingClientRect();
+      var x = Math.max(0, Math.min(e.clientX - rect.left, rect.width)); // 限制在范围内
+      var percent = x / rect.width;
+      if (currentSongIndex >= 0 && currentSongIndex < playQueue.length) {
+        var song = playQueue[currentSongIndex];
+        currentProgress = percent * song.duration;
+        updateProgress();
+        if (audioPlayer.src && audioPlayer.duration) {
+          audioPlayer.currentTime = currentProgress;
+        }
+      }
+    }
+
+    // 音量条点击调节
+    volumeBar.addEventListener('click', function(e) {
+      var rect = volumeBar.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      volume = Math.max(0, Math.min(x / rect.width, 1)); // 限制0-1
+      volumeFill.style.width = (volume * 100) + '%'; // 更新音量显示
+      audioPlayer.volume = volume; // 同步到音频播放器
+      if (synthGainNode) synthGainNode.gain.value = volume; // 同步到合成器音量
+      updateVolumeIcon(); // 更新音量图标
+    });
+
+    // 音量按钮点击（静音/恢复）
+    var lastVolume = 0.7; // 记住上次音量
+    btnVolume.addEventListener('click', function() {
+      if (volume > 0) {
+        lastVolume = volume; // 保存当前音量
+        volume = 0; // 静音
+      } else {
+        volume = lastVolume; // 恢复音量
+      }
+      volumeFill.style.width = (volume * 100) + '%';
+      audioPlayer.volume = volume;
+      if (synthGainNode) synthGainNode.gain.value = volume; // 同步到合成器音量
+      updateVolumeIcon();
+    });
+
+    /**
+     * 更新音量图标
+     */
+    function updateVolumeIcon() {
+      if (volume === 0) btnVolume.textContent = '🔇'; // 静音
+      else if (volume < 0.5) btnVolume.textContent = '🔉'; // 低音量
+      else btnVolume.textContent = '🔊'; // 高音量
+    }
+
+    // 真实音频播放时的事件处理
+    audioPlayer.addEventListener('timeupdate', function() {
+      if (audioPlayer.src && audioPlayer.duration) {
+        currentProgress = audioPlayer.currentTime;
+        updateProgress();
+      }
+    });
+    audioPlayer.addEventListener('ended', function() {
+      playNext(); // 播放结束自动下一首
+    });
+
+    // ==================== 导航切换 ====================
+
+    /**
+     * 切换页面
+     * @param {string} pageName - 页面名称（home/rank/playlist/playlist-detail/search）
+     */
+    function switchPage(pageName) {
+      // 隐藏所有页面
+      var pages = document.querySelectorAll('.page');
+      for (var i = 0; i < pages.length; i++) {
+        pages[i].classList.remove('active');
+      }
+      // 显示目标页面
+      var target = document.getElementById('page-' + pageName);
+      if (target) target.classList.add('active');
+
+      // 更新导航链接激活状态
+      var links = document.querySelectorAll('.nav-links a');
+      for (var i = 0; i < links.length; i++) {
+        links[i].classList.remove('active');
+        if (links[i].getAttribute('data-page') === pageName) {
+          links[i].classList.add('active');
+        }
+      }
+    }
+
+    // 导航链接点击事件
+    document.querySelectorAll('.nav-links a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        var page = this.getAttribute('data-page');
+        switchPage(page); // 切换页面
+      });
+    });
+
+    // ==================== 搜索功能 ====================
+
+    // 搜索输入框回车或输入时触发
+    searchInput.addEventListener('input', function() {
+      var keyword = this.value.trim().toLowerCase(); // 获取搜索关键词并转小写
+      var resultsContainer = document.getElementById('searchResults');
+
+      if (!keyword) {
+        // 空关键词显示默认提示
+        resultsContainer.innerHTML = '<div class="search-empty">输入关键词搜索音乐、歌手或歌单</div>';
+        return;
+      }
+
+      // 搜索歌曲（匹配歌名、歌手、专辑）
+      var matchedSongs = [];
+      for (var i = 0; i < songs.length; i++) {
+        var s = songs[i];
+        if (s.name.toLowerCase().indexOf(keyword) !== -1 ||
+            s.artist.toLowerCase().indexOf(keyword) !== -1 ||
+            s.album.toLowerCase().indexOf(keyword) !== -1) {
+          matchedSongs.push(s);
+        }
+      }
+
+      // 搜索歌单（匹配歌单名）
+      var matchedPlaylists = [];
+      for (var i = 0; i < playlists.length; i++) {
+        var p = playlists[i];
+        if (p.name.toLowerCase().indexOf(keyword) !== -1) {
+          matchedPlaylists.push(p);
+        }
+      }
+
+      // 生成搜索结果HTML
+      var html = '';
+      if (matchedPlaylists.length > 0) {
+        html += '<div style="margin-bottom:16px"><div class="section-title"><span>相关歌单</span></div>';
+        html += '<div class="playlist-grid">';
+        for (var i = 0; i < matchedPlaylists.length; i++) {
+          var pl = matchedPlaylists[i];
+          html += '<div class="playlist-card fade-in" onclick="openPlaylistDetail(' + pl.id + ')">';
+          html += '  <div class="cover"><img src="' + pl.cover + '" alt="' + pl.name + '"><span class="play-count">▶ ' + pl.playCount + '</span></div>';
+          html += '  <div class="name">' + pl.name + '</div>';
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+      if (matchedSongs.length > 0) {
+        html += '<div class="section-title"><span>相关歌曲（' + matchedSongs.length + '首）</span></div>';
+        for (var i = 0; i < matchedSongs.length; i++) {
+          var song = matchedSongs[i];
+          html += '<div class="song-item fade-in" onclick="playSongFromList(' + song.id + ')">';
+          html += '  <div class="song-cover"><img src="' + song.cover + '" alt="' + song.name + '"></div>';
+          html += '  <div class="song-info">';
+          html += '    <div class="song-name">' + song.name + '</div>';
+          html += '    <div class="song-artist">' + song.artist + ' - ' + song.album + '</div>';
+          html += '  </div>';
+          html += '  <span class="song-duration">' + formatTime(song.duration) + '</span>';
+          html += '</div>';
+        }
+      }
+      if (!html) {
+        html = '<div class="search-empty">未找到相关结果，换个关键词试试</div>';
+      }
+      resultsContainer.innerHTML = html;
+
+      // 切换到搜索结果页
+      switchPage('search');
+    });
+
+    // ==================== 轮播图功能 ====================
+
+    /**
+     * 切换轮播图
+     * @param {number} index - 目标轮播索引
+     */
+    function goToBanner(index) {
+      bannerIndex = index;
+      var track = document.getElementById('bannerTrack');
+      track.style.transform = 'translateX(-' + (index * (100 / 3)) + '%)'; // 滑动
+      // 更新指示器
+      var dots = document.querySelectorAll('.banner-dots span');
+      for (var i = 0; i < dots.length; i++) {
+        dots[i].classList.toggle('active', i === index);
+      }
+    }
+
+    // 轮播指示器点击
+    document.querySelectorAll('.banner-dots span').forEach(function(dot) {
+      dot.addEventListener('click', function() {
+        var idx = parseInt(this.getAttribute('data-index'));
+        goToBanner(idx); // 跳转到指定轮播
+        resetBannerTimer(); // 重置自动轮播计时
+      });
+    });
+
+    /**
+     * 启动自动轮播（每5秒切换）
+     */
+    function startBannerAutoPlay() {
+      bannerTimer = setInterval(function() {
+        var next = (bannerIndex + 1) % 3; // 下一张（循环）
+        goToBanner(next);
+      }, 5000); // 5秒间隔
+    }
+
+    /**
+     * 重置轮播计时器
+     */
+    function resetBannerTimer() {
+      if (bannerTimer) clearInterval(bannerTimer);
+      startBannerAutoPlay(); // 重新开始
+    }
+
+    // ==================== 刷新当前页面的歌曲列表高亮 ====================
+
+    /**
+     * 根据当前激活的页面刷新歌曲列表（更新播放高亮）
+     */
+    function refreshCurrentPageSongList() {
+      var activePage = document.querySelector('.page.active');
+      if (!activePage) return;
+      var pageId = activePage.id;
+
+      if (pageId === 'page-home') {
+        renderSongList('newSongList', songs, true); // 首页新歌列表
+      } else if (pageId === 'page-playlist-detail') {
+        // 获取当前歌单的歌曲并重新渲染
+        var detailSongs = document.querySelectorAll('#playlistDetailSongs .song-item');
+        if (detailSongs.length > 0) {
+          var songIds = [];
+          // 从已有的onclick属性中提取歌曲ID（简单方式）
+          for (var i = 0; i < detailSongs.length; i++) {
+            var onclickStr = detailSongs[i].getAttribute('onclick') || '';
+            var match = onclickStr.match(/\d+/);
+            if (match) songIds.push(parseInt(match[0]));
+          }
+          var songObjs = [];
+          for (var i = 0; i < songIds.length; i++) {
+            songObjs.push(findSongById(songIds[i]));
+          }
+          renderSongList('playlistDetailSongs', songObjs, true);
+        }
+      } else if (pageId === 'page-rank') {
+        renderRankList();
+      }
+    }
+
+    // ==================== 键盘快捷键 ====================
+    document.addEventListener('keydown', function(e) {
+      // 如果搜索框聚焦，不处理快捷键
+      if (document.activeElement === searchInput) return;
+      if (e.code === 'Space') { e.preventDefault(); togglePlay(); } // 空格：播放/暂停
+      if (e.code === 'ArrowLeft') { e.preventDefault(); playPrev(); } // 左箭头：上一首
+      if (e.code === 'ArrowRight') { e.preventDefault(); playNext(); } // 右箭头：下一首
+    });
+
+    // ==================== 初始化 ====================
+
+    /**
+     * 页面加载完成后初始化所有内容
+     */
+    function init() {
+      // 渲染首页热门推荐（取前6个歌单）
+      renderPlaylists('hotPlaylistGrid', playlists);
+      // 渲染新歌列表（取前20首歌）
+      renderSongList('newSongList', songs, true);
+      // 渲染全部歌单页面
+      renderPlaylists('allPlaylistGrid', playlists);
+      // 渲染排行榜
+      renderRankList();
+      // 启动轮播自动播放
+      startBannerAutoPlay();
+      // 设置默认音量
+      audioPlayer.volume = volume;
+    }
+
+    // 页面加载完成后执行初始化
+    init();
+  </script>
+</body>
+</html>
