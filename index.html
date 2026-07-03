@@ -748,7 +748,7 @@
   </div>
 
   <!-- ==================== 音频元素（模拟播放） ==================== -->
-  <audio id="audioPlayer" playsinline webkit-playsinline preload="auto"></audio>
+  <audio id="audioPlayer" playsinline webkit-playsinline preload="metadata"></audio>
 
   <!-- ==================== JavaScript ==================== -->
   <script>
@@ -1311,6 +1311,10 @@
       // 显示播放器
       playerEl.classList.add('show');
 
+      // 显示加载状态
+      btnPlay.textContent = '⏳';
+      songNameEl.textContent = song.name + ' - 加载中...';
+
       // 封面开始旋转
       playerCover.classList.add('spinning');
 
@@ -1332,9 +1336,22 @@
           }
         };
         audioPlayer.load(); // 先加载（移动端必须）
+        // 监听缓冲事件
+        audioPlayer.onwaiting = function() {
+          btnPlay.textContent = '⏳';
+          songNameEl.textContent = song.name + ' - 缓冲中...';
+        };
+        audioPlayer.onplaying = function() {
+          btnPlay.textContent = '⏸';
+          songNameEl.textContent = song.name;
+        };
         // 监听可播放事件后再播放
         audioPlayer.oncanplay = function() {
           audioPlayer.oncanplay = null; // 只触发一次
+          // 恢复正常状态显示
+          btnPlay.textContent = '⏸';
+          songNameEl.textContent = song.name;
+          artistEl.textContent = song.artist;
           var playPromise = audioPlayer.play();
           if (playPromise !== undefined) {
             playPromise.catch(function(err) {
@@ -1345,6 +1362,8 @@
         // 超时保护：如果 oncanplay 没触发（如缓存命中），2秒后强制播放
         setTimeout(function() {
           if (audioPlayer.paused && isPlaying) {
+            btnPlay.textContent = '⏸';
+            songNameEl.textContent = song.name;
             var playPromise2 = audioPlayer.play();
             if (playPromise2 !== undefined) {
               playPromise2.catch(function() {});
