@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -748,7 +748,7 @@
   </div>
 
   <!-- ==================== 音频元素（模拟播放） ==================== -->
-  <audio id="audioPlayer"></audio>
+  <audio id="audioPlayer" playsinline webkit-playsinline preload="auto"></audio>
 
   <!-- ==================== JavaScript ==================== -->
   <script>
@@ -1331,10 +1331,26 @@
             totalTimeEl.textContent = formatTime(song.duration);
           }
         };
-        audioPlayer.play().catch(function() {
-          // 如果播放失败（如文件不存在），则使用合成音乐
-          startSynthPlay();
-        });
+        audioPlayer.load(); // 先加载（移动端必须）
+        // 监听可播放事件后再播放
+        audioPlayer.oncanplay = function() {
+          audioPlayer.oncanplay = null; // 只触发一次
+          var playPromise = audioPlayer.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(function(err) {
+              console.log('play failed:', err.message);
+            });
+          }
+        };
+        // 超时保护：如果 oncanplay 没触发（如缓存命中），2秒后强制播放
+        setTimeout(function() {
+          if (audioPlayer.paused && isPlaying) {
+            var playPromise2 = audioPlayer.play();
+            if (playPromise2 !== undefined) {
+              playPromise2.catch(function() {});
+            }
+          }
+        }, 2000);
       } else {
         // 没有音频文件时：初始化 Web Audio 合成器
         initAudioCtx();
@@ -1369,7 +1385,8 @@
         btnPlay.textContent = '⏸'; // 显示暂停图标
         playerCover.classList.add('spinning'); // 封面开始旋转
         if (hasAudioFile && audioPlayer.src) {
-          audioPlayer.play().catch(function() {}); // 恢复播放
+          var p = audioPlayer.play();
+          if (p !== undefined) p.catch(function() {}); // 移动端兼容
         } else if (audioCtx) {
           audioCtx.resume(); // 恢复 Web Audio 上下文
           // 如果合成器已停止，重新启动
@@ -1783,3 +1800,4 @@
   </script>
 </body>
 </html>
+
