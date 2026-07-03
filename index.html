@@ -226,7 +226,7 @@
       flex-shrink: 0; /* 不被压缩 */
     }
     .song-item.playing .song-index { color: #ec4141; } /* 播放中序号变红 */
-    .song-item .song-cover {
+    .song-item .song-cover { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       width: 48px; height: 48px; /* 封面尺寸 */
       border-radius: 6px; /* 圆角 */
       overflow: hidden; /* 隐藏溢出 */
@@ -1039,7 +1039,7 @@
         if (showIndex) {
           html += '  <span class="song-index">' + (i + 1) + '</span>'; // 序号
         }
-        html += '  <div class="song-cover"><img src="' + song.cover + '" alt="' + song.name + '" ></div>';
+        html += '  <div class="song-cover"><img src="' + song.cover + '" alt="' + song.name + '" onerror="this.style.display=\'none\'" ></div>';
         html += '  <div class="song-info">';
         html += '    <div class="song-name">' + song.name + '</div>';
         html += '    <div class="song-artist">' + song.artist + '</div>';
@@ -1068,7 +1068,7 @@
         }
         html += '<div class="rank-card fade-in">';
         html += '  <div class="rank-header">';
-        html += '    <div class="rank-cover"><img src="' + rank.cover + '" alt="' + rank.name + '"></div>';
+        html += '    <div class="rank-cover"><img src="' + rank.cover + '" alt="' + rank.name + '" onerror="this.style.display=\'none\'"></div>';
         html += '    <div><div class="rank-name">' + rank.name + '</div>';
         html += '    <div class="rank-update">' + rank.update + '</div></div>';
         html += '  </div>';
@@ -1502,7 +1502,7 @@
         for (var i = 0; i < matchedPlaylists.length; i++) {
           var pl = matchedPlaylists[i];
           html += '<div class="playlist-card fade-in" onclick="openPlaylistDetail(' + pl.id + ')">';
-          html += '  <div class="cover"><img src="' + pl.cover + '" alt="' + pl.name + '"><span class="play-count">▶ ' + pl.playCount + '</span></div>';
+          html += '  <div class="cover"><img src="' + pl.cover + '" alt="' + pl.name + '" onerror="this.style.display=\'none\'"><span class="play-count">▶ ' + pl.playCount + '</span></div>';
           html += '  <div class="name">' + pl.name + '</div>';
           html += '</div>';
         }
